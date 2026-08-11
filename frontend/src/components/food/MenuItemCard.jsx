@@ -46,7 +46,7 @@ export default function MenuItemCard({ item }) {
         <button
           onClick={handleAdd}
           disabled={adding}
-          className="-mt-3 bg-white border border-brand-500 text-brand-600 font-semibold text-xs px-4 py-1.5 rounded-lg shadow-sm hover:bg-brand-50 disabled:opacity-60 flex items-center gap-1"
+          className="mt-2 bg-white border border-brand-500 text-brand-600 font-semibold text-xs px-4 py-1.5 rounded-lg shadow-sm hover:bg-brand-50 disabled:opacity-60 flex items-center gap-1"
         >
           {adding ? (
             <Loader2 size={12} className="animate-spin" />

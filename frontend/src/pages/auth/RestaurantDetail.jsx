@@ -110,7 +110,7 @@ export default function RestaurantDetail() {
 
       <div className="max-w-4xl mx-auto px-4">
         {/* Info row */}
-        <div className="bg-white rounded-xl shadow-sm -mt-6 relative p-4 flex flex-wrap gap-4 text-sm text-gray-600">
+        <div className="bg-white rounded-xl shadow-sm -mt-4 relative p-4 flex flex-wrap gap-4 text-sm text-gray-600">
           {restaurant.address && (
             <span className="flex items-center gap-1.5">
               <MapPin size={14} className="text-brand-500" />
@@ -118,7 +118,7 @@ export default function RestaurantDetail() {
             </span>
           )}
           {(restaurant.openingTime || restaurant.closingTime) && (
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 ml-1">
               <Clock size={14} className="text-brand-500" />
               {restaurant.openingTime || "--"} – {restaurant.closingTime || "--"}
             </span>

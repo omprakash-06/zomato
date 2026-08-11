@@ -61,12 +61,12 @@ export default function LikeButton({ sellerId, initialLiked = false, initialCoun
     >
       <Heart
         size={size}
-        className={`${pop ? "like-pop" : ""} transition-colors ${
-          liked ? "text-brand-500 fill-brand-500" : "text-white fill-black/20"
+        className={`${pop ? "like-pop" : ""} transition-colors drop-shadow-sm ${
+          liked ? "text-brand-500 fill-brand-500" : "text-white fill-white/90"
         }`}
         strokeWidth={2}
       />
-      {count != null && <span className="text-xs text-gray-600">{count}</span>}
+      {count != null && <span className="text-xs text-white font-medium">{count}</span>}
     </button>
   );
 }

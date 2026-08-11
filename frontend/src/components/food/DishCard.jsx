@@ -48,7 +48,7 @@ export default function DishCard({ item }) {
       <button
         onClick={handleAdd}
         disabled={adding}
-        className="-mt-3 ml-auto mr-3 flex items-center gap-1 bg-white border border-brand-500 text-brand-600 font-semibold text-xs px-4 py-1.5 rounded-lg shadow-sm hover:bg-brand-50 disabled:opacity-60"
+        className="mt-2 ml-auto mr-3 flex items-center gap-1 bg-white border border-brand-500 text-brand-600 font-semibold text-xs px-4 py-1.5 rounded-lg shadow-sm hover:bg-brand-50 disabled:opacity-60"
       >
         {adding ? (
           <Loader2 size={12} className="animate-spin" />
@@ -61,7 +61,7 @@ export default function DishCard({ item }) {
         )}
       </button>
 
-      <div className="p-3 pt-1">
+      <div className="p-3 pt-2">
         <Link to={`/product/${item._id}`} className="font-medium text-gray-900 line-clamp-1 text-sm hover:text-brand-600">
           {item.name}
         </Link>

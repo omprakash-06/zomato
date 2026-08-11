@@ -17,11 +17,10 @@ const addToCart = async (req, res) => {
             });
         }
 
-        // Stock check
-        if (product.stock < (quantity || 1)) {
+        if (!product.isAvailable) {
             return res.status(400).json({
                 success: false,
-                message: "Stock is not available ."
+                message: "This item is currently out of stock."
             });
         }
 
@@ -200,4 +199,3 @@ const clearCart = async (req, res) => {
 };
 
 module.exports = { addToCart, getCart, updateQuantity, removeFromCart, clearCart };
-

@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/*
+  Original food-delivery brand palette — inspired by Zomato's warmth,
+  but NOT its exact colors (deep coral instead of pure red).
+*/
+@theme {
+  --color-brand-50:  #fff4ed;
+  --color-brand-100: #ffe6d5;
+  --color-brand-200: #ffc9aa;
+  --color-brand-300: #ffa574;
+  --color-brand-400: #ff7a3d;
+  --color-brand-500: #f8541e;  /* primary */
+  --color-brand-600: #e2400f;
+  --color-brand-700: #bc300c;
+  --color-brand-800: #952810;
+  --color-brand-900: #79240f;
+
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #fffaf6;
+}
+
+.veg-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #0f8a1f;
+  border-radius: 2px;
+  position: relative;
+}
+.veg-dot::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #0f8a1f;
+  border-radius: 50%;
+}
+.nonveg-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #a3170f;
+  border-radius: 2px;
+  position: relative;
+}
+.nonveg-dot::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #a3170f;
+  border-radius: 50%;
+}
+
+@keyframes pulse-heart {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.like-pop {
+  animation: pulse-heart 0.35s ease-in-out;
+}

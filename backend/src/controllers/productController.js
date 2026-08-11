@@ -77,9 +77,11 @@ const createProduct = async (req, res) => {
 };
 
 // ─── Get All Products (Public) ────────────────────────
+// Zomato-style dish search: lets buyers search/browse food items directly
+// across all restaurants, without opening a restaurant page first.
 const getAllProducts = async (req, res) => {
     try {
-        const { category, minPrice, maxPrice, rating, search, sort } = req.query;
+        const { category, minPrice, maxPrice, rating, search, sort, isVeg } = req.query;
 
         // FIX: pagination added — page/limit query params, defaults 1 / 12
         const page  = Math.max(Number(req.query.page)  || 1, 1);
@@ -87,15 +89,17 @@ const getAllProducts = async (req, res) => {
         const skip  = (page - 1) * limit;
 
         // FIX: unavailable items public listing mein hide — CTO requirement
-        const filter = { status: "active", isAvailable: true };
+        const match = { status: "active", isAvailable: true };
 
-        if (category) filter.category = { $in: category.split(",") };
-        if (minPrice || maxPrice) filter.actualPrice = {
+        if (category) match.category = { $in: category.split(",").map((c) => new (require("mongoose").Types.ObjectId)(c)) };
+        if (minPrice || maxPrice) match.actualPrice = {
             ...(minPrice && { $gte: Number(minPrice) }),
             ...(maxPrice && { $lte: Number(maxPrice) }),
         };
-        if (rating)  filter.averageRating = { $gte: Number(rating) };
-        if (search)  filter.name = { $regex: search, $options: "i" };
+        if (rating)  match.averageRating = { $gte: Number(rating) };
+        if (isVeg === "true")  match.isVeg = true;
+        if (isVeg === "false") match.isVeg = false;
+        if (search)  match.name = { $regex: search, $options: "i" };
 
         // FIX: sort support (frontend already sends ?sort=price_asc etc.)
         const sortMap = {
@@ -104,17 +108,68 @@ const getAllProducts = async (req, res) => {
             newest:     { createdAt: -1 },
             rating:     { averageRating: -1 },
         };
-        const sortBy = sortMap[sort] || {};
+        const sortBy = sortMap[sort] || { createdAt: -1 };
 
-        const [products, total] = await Promise.all([
-            Product.find(filter)
-                .populate("category", "name")
-                .select("name price discount actualPrice thumbnailImage averageRating brand stock images size")
-                .sort(sortBy)
-                .skip(skip)
-                .limit(limit),
-            Product.countDocuments(filter),
-        ]);
+        // FIX: earlier this used Product.find() directly, which meant a product
+        // from a *pending/rejected* seller (or one whose restaurant is closed)
+        // could still show up in public dish search. We now $lookup the Seller
+        // doc (Product.sellerId is the seller's User _id, matched against
+        // Seller.userId) and only keep items whose restaurant is "approved" —
+        // and attach the restaurant's name/id so the UI can show/link it.
+        const pipeline = [
+            { $match: match },
+            {
+                $lookup: {
+                    from: "sellers",
+                    localField: "sellerId",
+                    foreignField: "userId",
+                    as: "restaurant",
+                },
+            },
+            { $unwind: "$restaurant" },
+            { $match: { "restaurant.status": "approved" } },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "category",
+                    foreignField: "_id",
+                    as: "category",
+                },
+            },
+            { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    name: 1,
+                    price: 1,
+                    discount: 1,
+                    actualPrice: 1,
+                    thumbnailImage: 1,
+                    averageRating: 1,
+                    brand: 1,
+                    stock: 1,
+                    images: 1,
+                    size: 1,
+                    isVeg: 1,
+                    description: 1,
+                    "category._id": 1,
+                    "category.name": 1,
+                    "restaurant._id": 1,
+                    "restaurant.shopname": 1,
+                    "restaurant.isOpen": 1,
+                },
+            },
+            { $sort: sortBy },
+            {
+                $facet: {
+                    data: [{ $skip: skip }, { $limit: limit }],
+                    totalCount: [{ $count: "count" }],
+                },
+            },
+        ];
+
+        const result = await Product.aggregate(pipeline);
+        const products = result[0]?.data || [];
+        const total = result[0]?.totalCount?.[0]?.count || 0;
 
         return res.status(200).json({
             success: true,
@@ -140,8 +195,7 @@ const getAllProducts = async (req, res) => {
 const getProduct = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
-            .populate("category", "name commissionPercent")
-            .populate("sellerId", "name");
+            .populate("category", "name commissionPercent");
 
         if (!product) {
             return res.status(404).json({
@@ -150,9 +204,22 @@ const getProduct = async (req, res) => {
             });
         }
 
+        // FIX: product.sellerId is the seller's *User* _id, not the Seller
+        // document's own _id — the shop name/rating live on the Seller doc,
+        // so we look it up separately by userId to attach to the response.
+        const restaurant = await Seller.findOne({ userId: product.sellerId, status: "approved" })
+            .select("shopname coverImage avgRating ratingCount isOpen cuisines address");
+
+        if (!restaurant) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found."
+            });
+        }
+
         return res.status(200).json({
             success: true,
-            data: product,
+            data: { ...product.toObject(), restaurant },
         });
 
     } catch (error) {
@@ -354,7 +421,3 @@ const getProductsBySeller = async (req, res) => {
     }
 };
 module.exports = { createProduct, getAllProducts, getProduct, getMyProducts, updateProduct, deleteProduct, getProductsBySeller };
-
-
-
-

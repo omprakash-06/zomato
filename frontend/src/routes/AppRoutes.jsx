@@ -4,6 +4,7 @@ import Home from "../pages/auth/home";
 import Login from "../pages/auth/login";
 import Register from "../pages/auth/register";
 import RestaurantDetail from "../pages/auth/RestaurantDetail";
+import ProductDetail from "../pages/auth/ProductDetail";
 
 const AppRoutes = [
   {
@@ -16,6 +17,10 @@ const AppRoutes = [
       {
         path: "/restaurant/:id",
         element: <RestaurantDetail />,
+      },
+      {
+        path: "/product/:id",
+        element: <ProductDetail />,
       },
     ],
   },

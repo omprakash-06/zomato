@@ -51,10 +51,13 @@ const createOrder = async (req, res) => {
                 });
             }
 
-            if (product.stock < quantity) {
+            // FIX: same bug as cartController — `stock` is never set by the
+            // seller UI (always 0), so this always blocked checkout. Check
+            // isAvailable instead, which is the toggle sellers actually use.
+            if (!product.isAvailable) {
                 return res.status(400).json({
                     success: false,
-                    message: "Stock available nahi hai."
+                    message: "This item is currently out of stock."
                 });
             }
 
@@ -79,10 +82,11 @@ const createOrder = async (req, res) => {
 
             for (const item of cart.items) {
                 const product = item.productId;
-                if (product.stock < item.quantity) {
+                // FIX: same isAvailable-not-stock fix as above
+                if (!product.isAvailable) {
                     return res.status(400).json({
                         success: false,
-                        message: `${product.name} ka stock available nahi hai.`
+                        message: `${product.name} is currently out of stock.`
                     });
                 }
                 totalAmount += product.actualPrice * item.quantity;
@@ -214,10 +218,11 @@ const verifyPayment = async (req, res) => {
         });
       }
 
-      if (product.stock < Number(notes.quantity)) {
+      // FIX: same isAvailable-not-stock fix as createOrder above
+      if (!product.isAvailable) {
         return res.status(400).json({
           success: false,
-          message: "Product out of stock.",
+          message: "Product is currently out of stock.",
         });
       }
 
@@ -289,10 +294,13 @@ const verifyPayment = async (req, res) => {
 
       const product = item.productId;
 
-      if (product.stock < item.quantity) {
+      // FIX: same isAvailable-not-stock fix as above — this was the last
+      // of 4 spots in the checkout flow that always failed with a 400
+      // because stock was always 0.
+      if (!product.isAvailable) {
        return res.status(400).json({
         success: false,
-        message: `${product.name} stock not available.`,
+        message: `${product.name} is currently out of stock.`,
        });
       }
 
@@ -310,10 +318,6 @@ const verifyPayment = async (req, res) => {
         size: item.size,
         price: product.actualPrice,
       });
-
-    await Product.findByIdAndUpdate(product._id, {
-      $inc: { stock: -item.quantity },
-    });
   }
 
   const sellerAmount = totalAmount - commission;

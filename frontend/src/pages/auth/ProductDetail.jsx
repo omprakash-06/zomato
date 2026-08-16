@@ -248,7 +248,7 @@ export default function ProductDetail() {
                 onClick={handleBuyNow}
                 className="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3 rounded-lg"
               >
-                Buy Now
+                Order Now
               </button>
             </div>
           </div>

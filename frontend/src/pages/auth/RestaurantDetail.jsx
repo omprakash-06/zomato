@@ -82,7 +82,7 @@ export default function RestaurantDetail() {
             <Store size={48} />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
         <Link
           to="/"
@@ -118,7 +118,7 @@ export default function RestaurantDetail() {
             </span>
           )}
           {(restaurant.openingTime || restaurant.closingTime) && (
-            <span className="flex items-center gap-1.5 ml-1">
+            <span className="flex items-center gap-1.5 ml-1 mt-1">
               <Clock size={14} className="text-brand-500" />
               {restaurant.openingTime || "--"} – {restaurant.closingTime || "--"}
             </span>

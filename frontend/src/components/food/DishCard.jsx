@@ -1,10 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Loader2, Star, Store } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "../../context/cartContext";
+import { useAuth } from "../../context/authContext";
 
 export default function DishCard({ item }) {
   const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
@@ -12,6 +15,11 @@ export default function DishCard({ item }) {
   const hasDiscount = item.discount > 0;
 
   async function handleAdd() {
+    if (!isLoggedIn) {
+      const goLogin = window.confirm("Please login to add items to your cart. Go to login page now?");
+      if (goLogin) navigate("/login");
+      return;
+    }
     setAdding(true);
     try {
       await addToCart(item._id, { quantity: 1 });
@@ -19,6 +27,7 @@ export default function DishCard({ item }) {
       setTimeout(() => setAdded(false), 1200);
     } catch (err) {
       console.error(err);
+      window.alert("Couldn't add this to your cart. Please try again.");
     } finally {
       setAdding(false);
     }

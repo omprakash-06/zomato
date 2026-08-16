@@ -36,27 +36,27 @@ export function CartProvider({ children }) {
 
   const addToCart = useCallback(async (productId, { size, quantity = 1 } = {}) => {
     const res = await api.post(`/buyer/${productId}`, { quantity, size });
-    setCart(res.data?.data || null);
+    await fetchCart();
     return res.data;
-  }, []);
+  }, [fetchCart]);
 
   const updateQuantity = useCallback(async (productId, { size, quantity }) => {
     const res = await api.put(`/buyer/${productId}`, { quantity, size });
-    setCart(res.data?.data || null);
+    await fetchCart();
     return res.data;
-  }, []);
+  }, [fetchCart]);
 
   const removeItem = useCallback(async (productId, { size } = {}) => {
     const res = await api.delete(`/buyer/${productId}`, { data: { size } });
-    setCart(res.data?.data || null);
+    await fetchCart();
     return res.data;
-  }, []);
+  }, [fetchCart]);
 
   const clearCart = useCallback(async () => {
     const res = await api.delete(`/buyer/`);
-    setCart(res.data?.data || null);
+    await fetchCart();
     return res.data;
-  }, []);
+  }, [fetchCart]);
 
   return (
     <CartContext.Provider

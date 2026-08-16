@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Star, Store, Plus, Minus, Loader2 } from "lucide-react";
 import api from "../../services/axios";
 import { useCart } from "../../context/cartContext";
+import { useAuth } from "../../context/authContext";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +42,16 @@ export default function ProductDetail() {
     };
   }, [id]);
 
+  function requireLogin() {
+    const goLogin = window.confirm("Please login to continue. Go to login page now?");
+    if (goLogin) navigate("/login");
+  }
+
   async function handleAdd() {
+    if (!isLoggedIn) {
+      requireLogin();
+      return;
+    }
     setAdding(true);
     try {
       await addToCart(product._id, { quantity: qty });
@@ -47,9 +59,18 @@ export default function ProductDetail() {
       setTimeout(() => setAdded(false), 1500);
     } catch (err) {
       console.error(err);
+      window.alert("Couldn't add this to your cart. Please try again.");
     } finally {
       setAdding(false);
     }
+  }
+
+  function handleBuyNow() {
+    if (!isLoggedIn) {
+      requireLogin();
+      return;
+    }
+    navigate(`/checkout?type=buyNow&productId=${product._id}&quantity=${qty}`);
   }
 
   if (loading) return <DetailSkeleton />;
@@ -180,7 +201,7 @@ export default function ProductDetail() {
               <button
                 onClick={handleAdd}
                 disabled={adding}
-                className="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3 rounded-lg disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex-1 bg-white border-2 border-brand-500 text-brand-600 hover:bg-brand-50 font-semibold text-sm py-3 rounded-lg disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {adding ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -189,6 +210,13 @@ export default function ProductDetail() {
                 ) : (
                   "Add to Cart"
                 )}
+              </button>
+
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3 rounded-lg"
+              >
+                Buy Now
               </button>
             </div>
           </div>

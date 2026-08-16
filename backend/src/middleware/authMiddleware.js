@@ -13,8 +13,9 @@ const isLoggedIn = (req, res, next) => {
         req.user = decoded; 
         next();
     } catch (error) {
-        return res.status(500).json({
-            message:error.message
+        return res.status(401).json({
+            success:false,
+            message:"session expired"
         })
     }
 };

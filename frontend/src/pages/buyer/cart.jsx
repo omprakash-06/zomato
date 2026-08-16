@@ -186,7 +186,7 @@ const total = subtotal - savings + shipping;
                       </span>
                       <button
                         onClick={() => handleQuantityChange(item, (item.quantity || 1) + 1)}
-                        disabled={isPending || (product.stock != null && item.quantity >= product.stock)}
+                        disabled={isPending || (item.quantity || 1) >= 20}
                         className="p-2 text-gray-500 hover:text-brand-600 disabled:opacity-40"
                       >
                         <Plus size={14} />

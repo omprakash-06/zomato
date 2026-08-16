@@ -10,63 +10,90 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import api from "../../services/axios";
 import { useAuth } from "../../context/authContext";
 import { clearAccessToken } from "../../services/tokenStore";
 
+const SECTIONS = [
+  {
+    id: "password",
+    icon: Lock,
+    title: "Change Password",
+    subtitle: "Update the password you use to sign in",
+  },
+  {
+    id: "address",
+    icon: MapPin,
+    title: "Address",
+    subtitle: "Manage the address used for delivery",
+  },
+  {
+    id: "account",
+    icon: ShieldAlert,
+    title: "Account & Sessions",
+    subtitle: "Manage sign-ins, or delete your account",
+  },
+];
+
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState("password"); // "password" | "address" | "account"
+  const [active, setActive] = useState(null); // null = menu view | "password" | "address" | "account"
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Account</h1>
-
+    <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Profile header — read only, name/email come from the logged-in session */}
-      <div className="flex items-center gap-4 border rounded-xl p-5 mb-8 bg-gray-50">
-        <div className="w-14 h-14 rounded-full bg-brand-600 text-white text-xl font-semibold flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-4 rounded-2xl p-5 mb-6 bg-linear-to-r from-brand-600 to-brand-500 text-white shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur text-white text-2xl font-semibold flex items-center justify-center shrink-0 border-2 border-white/40">
           {user?.name?.[0]?.toUpperCase() || "U"}
         </div>
         <div className="min-w-0">
-          <p className="font-semibold text-gray-900 truncate">{user?.name || "—"}</p>
-          <p className="text-sm text-gray-500 truncate">{user?.email || "—"}</p>
+          <p className="text-xs uppercase tracking-wide text-white/70 font-medium mb-0.5">My Account</p>
+          <p className="font-bold text-lg truncate">{user?.name || "—"}</p>
+          <p className="text-sm text-white/80 truncate">{user?.email || "—"}</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-6 border-b mb-8">
-        <TabButton active={tab === "password"} onClick={() => setTab("password")} icon={<Lock size={16} />}>
-          Change Password
-        </TabButton>
-        <TabButton active={tab === "address"} onClick={() => setTab("address")} icon={<MapPin size={16} />}>
-          Address
-        </TabButton>
-        <TabButton active={tab === "account"} onClick={() => setTab("account")} icon={<ShieldAlert size={16} />}>
-          Account
-        </TabButton>
-      </div>
+      {active === null ? (
+        // ── Menu view: each setting shown as a tappable "service" card ──
+        <div className="space-y-3">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setActive(s.id)}
+              className="w-full flex items-center gap-4 bg-white border border-gray-100 rounded-xl p-4 text-left hover:border-brand-200 hover:shadow-md transition-all"
+            >
+              <div className="w-11 h-11 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                <s.icon size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-gray-900">{s.title}</p>
+                <p className="text-sm text-gray-500 truncate">{s.subtitle}</p>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 shrink-0" />
+            </button>
+          ))}
+        </div>
+      ) : (
+        // ── Detail view: back button + the selected section ──
+        <div>
+          <button
+            onClick={() => setActive(null)}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-600 mb-5"
+          >
+            <ChevronLeft size={16} /> Back to Account
+          </button>
 
-      {tab === "password" && <ChangePasswordSection />}
-      {tab === "address" && <AddressSection />}
-      {tab === "account" && <AccountSection />}
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            {active === "password" && <ChangePasswordSection />}
+            {active === "address" && <AddressSection />}
+            {active === "account" && <AccountSection />}
+          </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-function TabButton({ active, onClick, icon, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 pb-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
-        active
-          ? "border-brand-600 text-brand-600"
-          : "border-transparent text-gray-500 hover:text-gray-700"
-      }`}
-    >
-      {icon}
-      {children}
-    </button>
   );
 }
 

@@ -20,10 +20,22 @@ const DISH_SORTS = [
 ];
 
 export default function Home() {
-  const [urlParams] = useSearchParams();
-  const [tab, setTab] = useState("restaurants"); // "restaurants" | "dishes"
+  const [urlParams, setUrlParams] = useSearchParams();
+  const [tab, setTab] = useState(urlParams.get("tab") === "dishes" ? "dishes" : "restaurants"); // "restaurants" | "dishes"
 
   const [search, setSearch] = useState(urlParams.get("search") || "");
+
+  function changeTab(nextTab) {
+    setTab(nextTab);
+    setUrlParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", nextTab);
+        return next;
+      },
+      { replace: true }
+    );
+  }
 
   // ── Restaurants state ──
   const [restaurants, setRestaurants] = useState([]);
@@ -98,14 +110,14 @@ export default function Home() {
   return (
     <div className="bg-[#fffaf6] min-h-screen">
       {/* Hero / search band */}
-      <section className="relative pt-8 pb-10 px-4 overflow-hidden max-h-[260px] md:max-h-[300px]">
+      <section className="relative pt-8 pb-10 px-4 overflow-hidden max-h-65 md:max-h-75">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80"
             alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-brand-500/90" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/50 to-brand-500/90" />
         </div>
 
         <div className="relative max-w-5xl mx-auto text-center">
@@ -131,10 +143,10 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 mt-6">
         {/* Tabs: Restaurants vs Dishes */}
         <div className="flex gap-6 border-b mb-6">
-          <TabButton active={tab === "restaurants"} onClick={() => setTab("restaurants")}>
+          <TabButton active={tab === "restaurants"} onClick={() => changeTab("restaurants")}>
             Restaurants
           </TabButton>
-          <TabButton active={tab === "dishes"} onClick={() => setTab("dishes")}>
+          <TabButton active={tab === "dishes"} onClick={() => changeTab("dishes")}>
             Dishes
           </TabButton>
         </div>

@@ -4,6 +4,7 @@ import { ChevronLeft, Star, Store, Plus, Minus, Loader2 } from "lucide-react";
 import api from "../../services/axios";
 import { useCart } from "../../context/cartContext";
 import { useAuth } from "../../context/authContext";
+import DishCard from "../../components/food/DishCard";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -19,15 +20,43 @@ export default function ProductDetail() {
   const [added, setAdded] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
+  const [moreFromRestaurant, setMoreFromRestaurant] = useState([]);
+  const [similarDishes, setSimilarDishes] = useState([]);
+
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       setError("");
+      setMoreFromRestaurant([]);
+      setSimilarDishes([]);
       try {
         const res = await api.get(`/product/${id}`);
-        if (!cancelled) setProduct(res.data?.data || null);
+        const data = res.data?.data || null;
+        if (!cancelled) setProduct(data);
+
+        // fire-and-forget: related sections shouldn't block the main page
+        if (data?.restaurant?._id) {
+          api
+            .get(`/product/restaurant/${data.restaurant._id}`)
+            .then((r) => {
+              if (cancelled) return;
+              const list = (r.data?.data || []).filter((p) => p._id !== id).slice(0, 6);
+              setMoreFromRestaurant(list);
+            })
+            .catch(() => {});
+        }
+        if (data?.category?._id) {
+          api
+            .get(`/product`, { params: { category: data.category._id, limit: 8 } })
+            .then((r) => {
+              if (cancelled) return;
+              const list = (r.data?.data || []).filter((p) => p._id !== id).slice(0, 6);
+              setSimilarDishes(list);
+            })
+            .catch(() => {});
+        }
       } catch (err) {
         console.error(err);
         if (!cancelled) setError("Product not found.");
@@ -94,9 +123,12 @@ export default function ProductDetail() {
   return (
     <div className="bg-[#fffaf6] min-h-screen pb-16">
       <div className="max-w-5xl mx-auto px-4 pt-6">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-600 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-600 mb-4"
+        >
           <ChevronLeft size={16} /> Back
-        </Link>
+        </button>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Image gallery */}
@@ -221,8 +253,29 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {moreFromRestaurant.length > 0 && (
+          <RelatedRow title={`More from ${restaurant?.shopname || "this restaurant"}`} items={moreFromRestaurant} />
+        )}
+
+        {similarDishes.length > 0 && (
+          <RelatedRow title={`Similar ${product.category?.name || "dishes"} you might like`} items={similarDishes} />
+        )}
       </div>
     </div>
+  );
+}
+
+function RelatedRow({ title, items }) {
+  return (
+    <section className="mt-10 pt-8 border-t">
+      <h2 className="text-lg font-bold text-gray-900 mb-4">{title}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {items.map((item) => (
+          <DishCard key={item._id} item={item} />
+        ))}
+      </div>
+    </section>
   );
 }
 

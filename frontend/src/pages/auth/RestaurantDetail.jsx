@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { MapPin, Clock, Store, ChevronLeft } from "lucide-react";
 import api from "../../services/axios";
 import RatingBadge from "../../components/food/RatingBadge";
@@ -9,6 +9,7 @@ import ReviewList from "../../components/food/ReviewList";
 
 export default function RestaurantDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -74,9 +75,13 @@ export default function RestaurantDetail() {
   return (
     <div className="bg-[#fffaf6] min-h-screen pb-16">
       {/* Cover */}
-      <div className="relative h-56 md:h-72 bg-gray-200">
+      <div className="relative h-56 md:h-72 max-w-4xl md:mx-auto md:mt-6 md:rounded-2xl overflow-hidden bg-gray-200">
         {restaurant.coverImage ? (
-          <img src={restaurant.coverImage} alt={restaurant.shopname} className="w-full h-full object-cover" />
+          <img
+            src={restaurant.coverImage}
+            alt={restaurant.shopname}
+            className="w-full h-full object-cover object-center"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             <Store size={48} />
@@ -84,12 +89,12 @@ export default function RestaurantDetail() {
         )}
         <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
-        <Link
-          to="/"
+        <button
+          onClick={() => navigate(-1)}
           className="absolute top-4 left-4 bg-white/90 backdrop-blur rounded-full p-2 hover:bg-white"
         >
           <ChevronLeft size={18} />
-        </Link>
+        </button>
 
         <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5">
           <LikeButton sellerId={id} initialLiked={liked} initialCount={restaurant.likesCount} />
@@ -118,7 +123,7 @@ export default function RestaurantDetail() {
             </span>
           )}
           {(restaurant.openingTime || restaurant.closingTime) && (
-            <span className="flex items-center gap-1.5 ml-1 mt-1">
+            <span className="flex items-center gap-1.5 ml-1">
               <Clock size={14} className="text-brand-500" />
               {restaurant.openingTime || "--"} – {restaurant.closingTime || "--"}
             </span>

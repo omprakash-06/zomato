@@ -13,8 +13,6 @@ import {
 } from "lucide-react";
 import { useCart } from "../../context/cartContext";
 
-const FREE_DELIVERY_THRESHOLD = 499;
-
 /**
  * Assumes each cart item's productId is populated with product details:
  *   { _id, name, thumbnailImage, price, actualPrice, discount, brand, stock }
@@ -40,10 +38,7 @@ const originalTotal = items.reduce((sum, item) => {
 
 const savings = Math.max( subtotal - originalTotal, 0);
 
-const shipping =
-  subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0 ? 0 : 49;
-
-const total = subtotal - savings + shipping;
+const total = subtotal - savings;
   function keyFor(item) {
     return `${item.productId?._id || item.productId}-${item.size || ""}`;
   }
@@ -224,15 +219,9 @@ const total = subtotal - savings + shipping;
             )}
             <div className="flex justify-between text-gray-600">
               <span>Delivery</span>
-              <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+              <span className="text-green-600">Free</span>
             </div>
           </div>
-
-          {shipping > 0 && (
-            <p className="text-xs text-gray-400 mt-2">
-              Add items worth ₹{(FREE_DELIVERY_THRESHOLD - subtotal).toLocaleString()} more for free delivery
-            </p>
-          )}
 
           <div className="flex justify-between font-semibold text-gray-900 border-t mt-4 pt-4">
             <span>Total</span>
@@ -300,4 +289,4 @@ function CartSkeleton() {
       </div>
     </section>
   );
-}
+        }

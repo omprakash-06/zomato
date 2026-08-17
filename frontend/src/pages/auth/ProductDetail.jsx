@@ -36,27 +36,35 @@ export default function ProductDetail() {
         const data = res.data?.data || null;
         if (!cancelled) setProduct(data);
 
-        // fire-and-forget: related sections shouldn't block the main page
-        if (data?.restaurant?._id) {
-          api
-            .get(`/product/restaurant/${data.restaurant._id}`)
-            .then((r) => {
-              if (cancelled) return;
-              const list = (r.data?.data || []).filter((p) => p._id !== id).slice(0, 6);
-              setMoreFromRestaurant(list);
-            })
-            .catch(() => {});
-        }
-        if (data?.category?._id) {
-          api
-            .get(`/product`, { params: { category: data.category._id, limit: 8 } })
-            .then((r) => {
-              if (cancelled) return;
-              const list = (r.data?.data || []).filter((p) => p._id !== id).slice(0, 6);
-              setSimilarDishes(list);
-            })
-            .catch(() => {});
-        }
+        // Both related-sections requests fire in parallel (fast — no waterfall),
+        // but we wait for both before rendering either, so we can de-duplicate:
+        // a dish that's already shown under "More from this restaurant" is
+        // dropped from "Similar dishes" instead of appearing in both.
+        const restaurantId = data?.restaurant?._id;
+        const categoryId = data?.category?._id;
+
+        Promise.all([
+          restaurantId
+            ? api.get(`/product/restaurant/${restaurantId}`).catch(() => null)
+            : Promise.resolve(null),
+          categoryId
+            ? api.get(`/product`, { params: { category: categoryId, limit: 12 } }).catch(() => null)
+            : Promise.resolve(null),
+        ]).then(([restaurantRes, categoryRes]) => {
+          if (cancelled) return;
+
+          const restaurantList = (restaurantRes?.data?.data || [])
+            .filter((p) => p._id !== id)
+            .slice(0, 6);
+          const shownIds = new Set([id, ...restaurantList.map((p) => p._id)]);
+
+          const categoryList = (categoryRes?.data?.data || [])
+            .filter((p) => !shownIds.has(p._id))
+            .slice(0, 6);
+
+          setMoreFromRestaurant(restaurantList);
+          setSimilarDishes(categoryList);
+        });
       } catch (err) {
         console.error(err);
         if (!cancelled) setError("Product not found.");
@@ -248,17 +256,17 @@ export default function ProductDetail() {
                 onClick={handleBuyNow}
                 className="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm py-3 rounded-lg"
               >
-                Order Now
+                Buy Now
               </button>
             </div>
           </div>
         </div>
 
-        {moreFromRestaurant.length > 0 && (
+        {moreFromRestaurant.length >= 2 && (
           <RelatedRow title={`More from ${restaurant?.shopname || "this restaurant"}`} items={moreFromRestaurant} />
         )}
 
-        {similarDishes.length > 0 && (
+        {similarDishes.length >= 2 && (
           <RelatedRow title={`Similar ${product.category?.name || "dishes"} you might like`} items={similarDishes} />
         )}
       </div>
